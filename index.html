@@ -3,10 +3,20 @@
 <head>
     <title>Open Venmo</title>
     <script>
-        window.location.href = "venmo://paycharge?txn=pay&recipients=IronCarrot&amount=38.9&note=generalpot";
+        function getVenmoDeeplink(recipient, amount, noteBase) {
+            const timestamp = new Date().toISOString();
+            const note = encodeURIComponent(`${noteBase} ${timestamp}`);
+            return `venmo://paycharge?txn=pay&recipients=${recipient}&amount=${amount}&note=${note}`;
+        }
+
+        // Automatically redirect
+        window.location.href = getVenmoDeeplink("IronCarrot", "38.9", "generalpot");
     </script>
 </head>
 <body>
-    <p>如果 Venmo 没有自动打开，请点击这里：<a href="venmo://paycharge?txn=pay&recipients=IronCarrot&amount=38.9&note=generalpot">打开 Venmo</a></p>
+    <p>如果 Venmo 没有自动打开，请点击这里：<a id="venmo-link" href="#">打开 Venmo</a></p>
+    <script>
+        document.getElementById('venmo-link').href = getVenmoDeeplink("IronCarrot", "38.9", "generalpot");
+    </script>
 </body>
 </html>
