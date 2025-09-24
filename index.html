@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Open Venmo</title>
-    <script src="venmo.js"></script>
+        <title>Open Venmo</title>
+        <!-- Airtable.js from CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/airtable@0.12.2/browser/airtable.browser.js"></script>
+        <script>
+            // TODO: Replace these placeholders with your actual Airtable info
+            const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patPufm1cWCVo92Tq.ab37f723b10ab2f96e6b7561137255cb3135fcc1d3f41312cb790b0454189548';
+            const AIRTABLE_BASE_ID = 'appd6GyZBbNdq0ayL';
+            const AIRTABLE_TABLE_NAME = 'tblav3zyka0msIoeZ';
+
+            function fetchLatestVenmoDeepLink() {
+                const base = new Airtable({apiKey: AIRTABLE_PERSONAL_ACCESS_TOKEN}).base(AIRTABLE_BASE_ID);
+                base(AIRTABLE_TABLE_NAME)
+                    .select({
+                        sort: [{field: 'Session Time', direction: 'desc'}],
+                        maxRecords: 1
+                    })
+                    .firstPage(function(err, records) {
+                        const linkElem = document.getElementById('venmo-link');
+                        if (err) {
+                            linkElem.textContent = 'Error fetching Venmo link';
+                            return;
+                        }
+                        if (records && records[0] && records[0].fields['Venmo DeepLink']) {
+                            linkElem.href = records[0].fields['Venmo DeepLink'];
+                            linkElem.textContent = 'Pay with Venmo';
+                        } else {
+                            linkElem.textContent = 'Venmo link not found';
+                        }
+                    });
+            }
+            window.addEventListener('DOMContentLoaded', fetchLatestVenmoDeepLink);
+        </script>
 </head>
 <body>
-    <p>If Venmo does not open automatically, click here: <a id="venmo-link" href="#">Open Venmo</a><br>
-    Venmo Deeplink: <span id="deeplink-text"></span></p>
-    <script>
-        window.addEventListener('DOMContentLoaded', async () => {
-            const latestData = await fetchLatestVenmoLink();
-            const deeplink = latestData
-                ? getVenmoDeeplink(
-                    latestData.recipient,
-                    (parseFloat(latestData.sum) / parseInt(latestData.num)).toFixed(2),
-                    latestData.note
-                  )
-                : getVenmoDeeplink("IronCarrot", "1", "test payment");
-            document.getElementById('venmo-link').href = deeplink;
-            document.getElementById('deeplink-text').textContent = deeplink;
-            window.location.href = deeplink;
-        });
-    </script>
+    <p>如果 Venmo 没有自动打开，请点击这里：<a id="venmo-link" href="#">打开 Venmo</a></p>
 </body>
 </html>
