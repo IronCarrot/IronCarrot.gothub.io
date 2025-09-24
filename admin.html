@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Venmo Link Admin</title>
+    <script src="venmo.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', showCurrentVenmoLink);
+        // Patch handleForm to show feedback
+        const originalHandleForm = window.handleForm;
+        window.handleForm = async function(e) {
+            await originalHandleForm(e);
+            const feedback = document.getElementById('feedback-message');
+            // Get latest raw data and construct link
+            const latestData = await fetchLatestVenmoLink();
+            if (latestData) {
+                const amount = (parseFloat(latestData.sum) / parseInt(latestData.num)).toFixed(2);
+                feedback.innerHTML = `Latest Venmo Deeplink: <a href='${getVenmoDeeplink(latestData.recipient, amount, latestData.note)}' target='_blank'>${getVenmoDeeplink(latestData.recipient, amount, latestData.note)}</a>`;
+            } else {
+                feedback.innerHTML = 'No link generated.';
+            }
+            feedback.style.display = '';
+        };
+    </script>
+</head>
+<body>
+    <h2>Venmo Equal Split Generator (Admin Only)</h2>
+    <div>
+        <strong>Current link shown to users:</strong>
+        <span id="current-link-ref">Loading...</span>
+    </div>
+    <form id="venmo-form" onsubmit="return handleForm(event)">
+    <label>Sum Amount ($): <input type="number" id="sum-amount" required step="0.01" min="0.01" value="10"></label><br>
+    <label>Number of People: <input type="number" id="num-people" required min="1" value="10"></label><br>
+    <label>Recipient Username: <input type="text" id="recipient" value="IronCarrot" required></label><br>
+    <label>Note: <input type="text" id="note" value="test" required></label><br>
+        <button type="submit">Generate Venmo Link</button>
+    </form>
+        <p id="venmo-link-container" style="display:none;">Generated Deeplink: <a id="venmo-link" href="#" target="_blank"></a></p>
+    <p id="feedback-message" style="color: green; display: none;"></p>
+</body>
+</html>
