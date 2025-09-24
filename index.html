@@ -5,33 +5,38 @@
         <!-- Airtable.js from CDN -->
         <script src="https://cdn.jsdelivr.net/npm/airtable@0.12.2/browser/airtable.browser.js"></script>
         <script>
-            // TODO: Replace these placeholders with your actual Airtable info
+            // Airtable API fetch using REST for browser compatibility (CORS safe)
             const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patPufm1cWCVo92Tq.ab37f723b10ab2f96e6b7561137255cb3135fcc1d3f41312cb790b0454189548';
             const AIRTABLE_BASE_ID = 'appd6GyZBbNdq0ayL';
             const AIRTABLE_TABLE_NAME = 'tblav3zyka0msIoeZ';
 
-            function fetchLatestVenmoDeepLink() {
-                const base = new Airtable({apiKey: AIRTABLE_PERSONAL_ACCESS_TOKEN}).base(AIRTABLE_BASE_ID);
-                base(AIRTABLE_TABLE_NAME)
-                    .select({
-                        sort: [{field: 'Session Time', direction: 'desc'}],
-                        maxRecords: 1
-                    })
-                    .firstPage(function(err, records) {
-                        const linkElem = document.getElementById('venmo-link');
-                        if (err) {
-                            linkElem.textContent = 'Error fetching Venmo link';
-                            return;
-                        }
-                        if (records && records[0] && records[0].fields['Venmo DeepLink']) {
-                            linkElem.href = records[0].fields['Venmo DeepLink'];
-                            linkElem.textContent = 'Pay with Venmo';
-                        } else {
-                            linkElem.textContent = 'Venmo link not found';
+            async function fetchLatestVenmoDeepLink() {
+                const linkElem = document.getElementById('venmo-link');
+                const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?maxRecords=1&sort%5B0%5D%5Bfield%5D=Session%20Time&sort%5B0%5D%5Bdirection%5D=desc`;
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
+                            'Content-Type': 'application/json'
                         }
                     });
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    if (data.records && data.records[0] && data.records[0].fields['Venmo DeepLink']) {
+                        const deeplink = data.records[0].fields['Venmo DeepLink'];
+                        linkElem.href = deeplink;
+                        linkElem.textContent = 'Pay with Venmo';
+                        window.location.href = deeplink;
+                    } else {
+                        linkElem.textContent = 'Venmo link not found';
+                    }
+                } catch (err) {
+                    linkElem.textContent = 'Error fetching Venmo link';
+                }
             }
-            window.addEventListener('DOMContentLoaded', fetchLatestVenmoDeepLink);
+            window.addEventListener('DOMContentLoaded', function() {
+                fetchLatestVenmoDeepLink();
+            });
         </script>
 </head>
 <body>
